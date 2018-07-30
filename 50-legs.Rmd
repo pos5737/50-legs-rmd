@@ -1,0 +1,111 @@
+---
+title: "Party Heterogeneity: Variation in the Variance Across Space and Time"
+author: "Carlisle Rainey"
+output: html_document
+bibliography: bibliography.bib
+csl: apsr.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Start the introduction here...
+
+# A Heading
+
+Continue here...
+
+## A Sub-Heading
+
+Continue...
+
+# See R Markdown at Work
+
+I can build the analysis directly into the R Markdown document and leave the code and/or output either seen or unseen. I leave it seen below, but we can hide either if we want. 
+
+## Tidy
+
+First, let's tidy the raw data a bit:
+
+```{r}
+# load packages
+library(tidyverse)
+library(haven)
+
+# load raw data
+leg_df_raw <- read_dta("shor_mccarty_1993-2016_individual_legislator_data_May_2018_release_(Updated_July_2018).dta")
+
+# clean data
+leg_df <- leg_df_raw %>%
+  # convert chamber-year indicator variables into a single variable
+  gather(chamber_year, observation, senate1993:house2016) %>%
+  # drop legislators who don't appear if they don't appear in a champter-year
+  filter(!is.na(observation)) %>%
+  # separate the chamber-year colum into separate chamber and year
+  # variables, see https://stackoverflow.com/questions/45591387/tidyr-separate-column-values-into-character-and-numeric-using-regex
+  separate(chamber_year, 
+           into = c("chamber", "year"), 
+           sep = "(?<=[a-z])(?=[0-9])") %>%
+  # keep only needed variables
+  select(state = st, chamber, year, party, name, ideology = np_score) %>%
+  # convert year from character to numeric
+  mutate(year = as.numeric(year)) %>%
+  # keep only house
+  filter(chamber == "house") %>%
+  # keep only Ds and Rs
+  filter(party != "X") %>%  
+  # quick check
+  glimpse()
+```
+
+## Summarize
+
+Now let's find the standard deviation for the legislators' ideologies in each party-state-year.
+
+```{r}
+# find standard deviation for each party in each party-state-year
+sum_df <- leg_df %>%
+  group_by(state, party, year) %>%  # set groups at state-party-year
+  summarize(sd = sd(ideology, na.rm = TRUE)) %>%  # calculate sd by group
+  glimpse()  # quick look
+```
+
+## Plot
+
+Unfortunately, R Markdown doesn't easily number figures and tables.
+
+```{r sds, fig.cap = "This figure shows the standard deviations for each state-party-year over time.", fig.height = 8, fig.width = 10}
+# plot the SD for each party across time in each state
+ggplot(sum_df, aes(x = year, y = sd, color = party)) +
+  facet_wrap(~ state) +
+  geom_line()
+```
+
+## Tables
+
+The html tables possible in R Markdown are cool. See [here](https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_html.html#table_styles) for more.
+
+```{r}
+# load packages
+library(kableExtra)
+# display NAs as empty
+options(knitr.kable.NA = '')
+sum_df %>%
+  # reduce the data a bit for space
+  filter(year > 2000) %>%
+  # give table columns nice names
+  rename(State = state, Party = party, Year = year, SD = sd) %>%
+  # put years in the columns to save a bit of space
+  spread(Year, SD) %>%
+  # make table
+  kable(escape = FALSE, align = "c") %>%
+  kable_styling(c("striped", "condensed"), full_width = FALSE)
+
+```
+
+## References
+
+Below, I use R Markdown syntax to automatically include references, create mathematical equations, incude and refence the figure.
+
+@shor-mccarty-2011 and @shor-berry-mccarty-2010 develop the statistical theory to estimate the ideology of state legislators along a single left-right dimmension. Using data from @shor-2018-data, I calculate the standard deviation of the legislators' ideologies for each state-party-year. Figure REF shows these standard deviations, calculated as $\sqrt{\frac{1}{N-1} \sum_{i=1}^N (x_i - \overline{x})^2}$, where $i$ indexes the legislators in each state-party-year and $N$ represents the total number of legislators in the state-party-year.
