@@ -1,7 +1,7 @@
 ---
 title: "Party Heterogeneity: Variation in the Variance Across Space and Time"
 author: "Carlisle Rainey"
-output: html_document
+output: pdf_document
 bibliography: bibliography.bib
 csl: apsr.csl
 ---
@@ -104,8 +104,10 @@ sum_df %>%
 
 ```
 
-## References
 
 Below, I use R Markdown syntax to automatically include references, create mathematical equations, incude and refence the figure.
 
 @shor-mccarty-2011 and @shor-berry-mccarty-2010 develop the statistical theory to estimate the ideology of state legislators along a single left-right dimmension. Using data from @shor-2018-data, I calculate the standard deviation of the legislators' ideologies for each state-party-year. Figure REF shows these standard deviations, calculated as $\sqrt{\frac{1}{N-1} \sum_{i=1}^N (x_i - \overline{x})^2}$, where $i$ indexes the legislators in each state-party-year and $N$ represents the total number of legislators in the state-party-year.
+
+## References
+
